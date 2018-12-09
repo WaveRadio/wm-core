@@ -13,7 +13,6 @@ TEMPLATE = app
 SOURCES += main.cpp \
     wmcore.cpp \
     wmprocess.cpp \
-    #wmicecastprocess.cpp \
     wmcontrolserver.cpp \
     wmcontrolclient.cpp \
     wmlogger.cpp
@@ -34,7 +33,6 @@ DEFINES += WMCORE_VERSION=\\\"0.0.1\\\"
 HEADERS += \
     wmcore.h \
     wmprocess.h \
-    #wmicecastprocess.h \
     wmcontrolserver.h \
     wmcontrolclient.h \
     wmlogger.h
