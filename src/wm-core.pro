@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     wmprocess.cpp \
     wmcontrolserver.cpp \
     wmcontrolclient.cpp \
-    wmlogger.cpp
+    wmlogger.cpp \
+    wmauthutil.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -35,4 +36,5 @@ HEADERS += \
     wmprocess.h \
     wmcontrolserver.h \
     wmcontrolclient.h \
-    wmlogger.h
+    wmlogger.h \
+    wmauthutil.h
