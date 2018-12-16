@@ -1,8 +1,6 @@
 #ifndef WMCORE_H
 #define WMCORE_H
 
-// #define WMCORE_VERSION "0.0.1"
-
 #include <QCoreApplication>
 #include <QObject>
 #include <QString>
@@ -15,15 +13,23 @@
 #include <QJsonValue>
 #include <QJsonParseError>
 
+#include <QFileInfo>
+
 #include "wmlogger.h"
 #include "wmprocess.h"
 #include "wmcontrolserver.h"
+
+class WMControlServer;
 
 class WMCore : public QObject
 {
     Q_OBJECT
 public:
     explicit WMCore(QString configFile, QCoreApplication *app = 0, QObject *parent = 0);
+
+    /// Public API to be used by WMControlServer
+    // Broadcasting processes
+    bool performProcessAction(QString tag, WMProcess::ProcessType type, WMControlServer::ProcessControlAction action);
 
 private:
 
@@ -38,8 +44,8 @@ private:
     QString icecastAppPath;
     QString runtimeDir;
     QString dataDir;
-    QStringList liquidsoapTags; // TODO: fill this
-    QStringList icecastTags;    // TODO: fill this
+    QStringList liquidsoapTags;
+    QStringList icecastTags;
     bool respawnProcessesOnDeath;
     bool respawnOnlyOnBadDeath;
 
@@ -57,8 +63,7 @@ private:
     void loadConfig (QString configFile);
     bool loadInstances(WMProcess::ProcessType type);
 
-    // Broadcasting processes
-    // TODO: implement creating and correcting process instances
+    // Broadcasting processes    
     void createProcesses(WMProcess::ProcessType type);
     void correctProcesses(WMProcess::ProcessType type);
 

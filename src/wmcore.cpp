@@ -17,14 +17,92 @@ WMCore::WMCore(QString configFile, QCoreApplication *app, QObject *parent) :
 
     loadConfig(configFile);
 
+    ///
+    /// WARNING! WARNING! WARNING!
+    /// THIS PART IS EXTREMELY DESTRUCTIVE!
+    /// IT PERFORMS A GENOCIDE OF PROCESSES THAT WERE RAN BEFORE
+    /// PLEASE DO NOT USE NEOTON WITH OTHER SERVICES THAT USE
+    /// THE SAME PROCESS NAME AS SPECIFIED IN `liquidsoap_path` CONFIG VARIABLE!
+    /// OTHERWISE IT WILL CAUSE DATA LOSS AND NUCLEAR EXPLOSION!
+    ///
+    /// YOU WERE WARNED!
+    ///
+
+    // (or should we use pidfiles instead?..)
+
     WMLogger::instance = new WMLogger(logFile, (WMLogger::LogLevel)logLevel);
     log ("This is WaveManager Core Service", WMLogger::Info);
     log (QString("You're using WMCore/%1").arg(WMCORE_VERSION));
 
-    server = new WMControlServer(serverPort);
+    QString processImageName = QFileInfo(liquidsoapAppPath).fileName();
+
+    #ifdef __linux__
+        log ("A Linux platform detected, cleaning up old processes if exist...", WMLogger::Warning);
+        system(QString("killall -9 %1").arg(processImageName).toUtf8().data());
+    #elif _WIN32
+        log ("A Windows platform detected, cleaning up old processes if exist...", WMLogger::Warning);
+        system(QString("taskkill /IM %1 /F /T").arg(processImageName).toUtf8().data());
+    #else
+        log ("The platform WaveManager runs in is unknown, process cleaning is your business.", WMLogger::Warning);
+    #endif
+
+    server = new WMControlServer(serverPort, this);
 
     if (loadInstances(WMProcess::Liquidsoap))
         createProcesses(WMProcess::Liquidsoap);
+}
+
+bool WMCore::performProcessAction(QString tag, WMProcess::ProcessType type,
+                                  WMControlServer::ProcessControlAction action)
+{
+    QStringList *tags;
+
+    switch (type)
+    {
+        case WMProcess::Abstract:
+            log ("Ambiguous process type to perform an action on, Abstract type isn't supported!", WMLogger::Warning);
+            return false;
+            break;
+
+        case WMProcess::Liquidsoap:
+            tags = &liquidsoapTags;
+            break;
+
+        case WMProcess::Icecast:
+            tags = &icecastTags;
+            break;
+
+        default:
+            log ("Bad value in ProcessType! That's a bug!", WMLogger::Warning);
+            return false;
+    }
+
+    if (tags->indexOf(tag) == -1)
+    {
+        log ("No instance found for the specified name", WMLogger::Warning);
+        return false;
+    }
+
+
+    switch (action)
+    {
+        case WMControlServer::Restart:
+            restartProcessFor(tag, type);
+            return true;
+            break;
+
+        case WMControlServer::Stop:
+            return stopProcessFor(tag, type, true);
+            break;
+
+        case WMControlServer::Start:
+            return createProcessFor(tag, type);
+            break;
+
+        default:
+            log ("Bad value in ProcessControlAction! That's a bug!", WMLogger::Warning);
+            return false;
+    }
 }
 
 void WMCore::log(QString message, WMLogger::LogLevel logLevel, QString component)
@@ -264,6 +342,8 @@ bool WMCore::createProcessFor(QString tag, WMProcess::ProcessType type)
     }
 
     WMProcess *process = new WMProcess(procPath, runtimeDir, tag, type, procArgs);
+
+    processPool.append(process);
 
     connect(process, SIGNAL(processDead(int, bool)), this, SLOT(onProcessDeath(int,bool)));
     connect(process, SIGNAL(processStarted()), this, SLOT(onProcessStart()));
