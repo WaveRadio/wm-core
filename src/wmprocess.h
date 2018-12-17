@@ -6,6 +6,18 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
+#include <QFile>
+#include <QTextStream>
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <signal.h>
+#elif _WIN32
+#include <windows.h>
+#include <tlhelp32.h>
+#else
+#error "WMProcess: unknown target OS, process presence detection won't work!"
+#endif
 
 #include "wmlogger.h"
 
@@ -30,25 +42,42 @@ public:
     void setNeedsRespawn(bool need);
     bool isNeedToRespawn();
 
+    bool attached();
+
     int pid();
     QString tag();
     QString typeAsString();
     ProcessType type();
 
-   static QString typeToString(ProcessType type);
+    static QString typeToString(ProcessType type);
+    static bool isProcessRunning(int pid);
 
 private:
 
     bool isRunning;
     bool iNeedToRespawn;
+    bool isAttached;
 
     QString appPath;
     QString processTag;
     QString runtimeDir;
+    QString pidFilePath;
     QStringList args;
     ProcessType processType;
 
     QProcess *process;
+    int processId;
+
+// Windows-specific vars to receive callbacks when process we attached to is dead
+#ifdef _WIN32
+    HANDLE processHandle;
+    HANDLE eventHandle;
+
+    static void CALLBACK winOnProcessExit (PVOID lpParameter, BOOLEAN TimerOrWaitFired);
+#endif
+
+    int readPid();
+    bool writePid(int pid);
 
     void log (QString message, WMLogger::LogLevel level = WMLogger::Debug);
 

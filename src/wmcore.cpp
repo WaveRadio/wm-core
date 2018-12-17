@@ -17,37 +17,14 @@ WMCore::WMCore(QString configFile, QCoreApplication *app, QObject *parent) :
 
     loadConfig(configFile);
 
-    ///
-    /// WARNING! WARNING! WARNING!
-    /// THIS PART IS EXTREMELY DESTRUCTIVE!
-    /// IT PERFORMS A GENOCIDE OF PROCESSES THAT WERE RAN BEFORE
-    /// PLEASE DO NOT USE NEOTON WITH OTHER SERVICES THAT USE
-    /// THE SAME PROCESS NAME AS SPECIFIED IN `liquidsoap_path` CONFIG VARIABLE!
-    /// OTHERWISE IT WILL CAUSE DATA LOSS AND NUCLEAR EXPLOSION!
-    ///
-    /// YOU WERE WARNED!
-    ///
-
-    // (or should we use pidfiles instead?..)
-
     WMLogger::instance = new WMLogger(logFile, (WMLogger::LogLevel)logLevel);
     log ("This is WaveManager Core Service", WMLogger::Info);
     log (QString("You're using WMCore/%1").arg(WMCORE_VERSION));
 
-    QString processImageName = QFileInfo(liquidsoapAppPath).fileName();
-
-    #ifdef __linux__
-        log ("A Linux platform detected, cleaning up old processes if exist...", WMLogger::Warning);
-        system(QString("killall -9 %1").arg(processImageName).toUtf8().data());
-    #elif _WIN32
-        log ("A Windows platform detected, cleaning up old processes if exist...", WMLogger::Warning);
-        system(QString("taskkill /IM %1 /F /T").arg(processImageName).toUtf8().data());
-    #else
-        log ("The platform WaveManager runs in is unknown, process cleaning is your business.", WMLogger::Warning);
-    #endif
-
+    log ("Creating server...");
     server = new WMControlServer(serverPort, this);
 
+    log ("Loading process instances...");
     if (loadInstances(WMProcess::Liquidsoap))
         createProcesses(WMProcess::Liquidsoap);
 }

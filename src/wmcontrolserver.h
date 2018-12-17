@@ -14,6 +14,7 @@
 #include "wmlogger.h"
 #include "wmcontrolclient.h"
 #include "wmprocess.h"
+#include "wmauthutil.h"
 
 class WMCore;
 
