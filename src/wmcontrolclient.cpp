@@ -2,6 +2,8 @@
 
 WMControlClient::WMControlClient(QWebSocket *sock, QObject *parent) : QObject(parent), sock(sock)
 {
+    isAuthorized = false;
+
     connect (sock, SIGNAL(textMessageReceived(QString)), this, SLOT(onSocketMessage(QString)));
     connect (sock, SIGNAL(disconnected()), this, SLOT(onSocketDisconnect()));
 }

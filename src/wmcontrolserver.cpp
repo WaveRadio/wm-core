@@ -111,6 +111,11 @@ void WMControlServer::onClientCommand(QString message)
 
     QStringList commands = message.split(" ", QString::SkipEmptyParts);
 
+    if (commands[0] == "AUTH")
+    {
+
+    }
+
     if (commands[0] == "SERVICE")
     {
         if (commands.count() < 4)

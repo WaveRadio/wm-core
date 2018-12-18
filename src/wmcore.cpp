@@ -82,6 +82,33 @@ bool WMCore::performProcessAction(QString tag, WMProcess::ProcessType type,
     }
 }
 
+QString WMCore::getCurrentSecret()
+{
+    QFile secretFile(QString("%1/core/access_secret").arg(runtimeDir));
+
+    if (!secretFile.exists())
+    {
+        log (QString("No access secret file found in path %1").arg(secretFile.fileName()), WMLogger::Warning);
+        return QString();
+    }
+
+    if (!secretFile.open(QIODevice::ReadOnly))
+    {
+        log (QString("Could not open the auth secret file; error %1").arg(secretFile.errorString()), WMLogger::Warning);
+        return QString();
+    }
+
+    QString secret = QString(secretFile.readAll()).trimmed();
+    secretFile.close();
+
+    if (secret.isEmpty())
+    {
+        log ("No access secret, users won't be accepted at all!", WMLogger::Warning);
+    }
+
+    return secret;
+}
+
 void WMCore::log(QString message, WMLogger::LogLevel logLevel, QString component)
 {
     WMLogger::instance->log(message, logLevel, component);

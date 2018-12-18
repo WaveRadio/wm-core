@@ -30,6 +30,7 @@ public:
     /// Public API to be used by WMControlServer
     // Broadcasting processes
     bool performProcessAction(QString tag, WMProcess::ProcessType type, WMControlServer::ProcessControlAction action);
+    QString getCurrentSecret();
 
 private:
 
@@ -72,8 +73,6 @@ private:
     bool stopProcessFor(QString tag, WMProcess::ProcessType type, bool forced = false);
     void restartProcessFor(QString tag, WMProcess::ProcessType type);
     void killAllProcesses(WMProcess::ProcessType type = WMProcess::Abstract, bool forRestart = false);
-
-
 
 signals:
 
