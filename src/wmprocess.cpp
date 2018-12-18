@@ -152,7 +152,7 @@ QString WMProcess::typeToString(ProcessType type)
 bool WMProcess::isProcessRunning(int pid)
 {
 #ifdef __linux__
-    return 0 == kill(pid, 0);
+    return kill(pid, 0) == 0;
 #elif _WIN32
     HANDLE pss = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 
@@ -186,9 +186,15 @@ void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
     long unsigned int exitCode;
 
     if (GetExitCodeProcess(proc->processHandle, &exitCode))
+    {
+        proc->log(QString("OS-level [Windows] process exit detected, exit code is %1").arg(exitCode));
         proc->onProcessFinish(exitCode);
+    }
     else
+    {
+        proc->log(QString("OS-level [Windows] process exit detected, exit code is unknown"));
         proc->onProcessFinish(0); // can't get the right return code
+    }
 }
 #endif
 
@@ -254,8 +260,10 @@ void WMProcess::start()
         log ("Process is already running, WMProcess is attaching to it...");
 
 #ifdef __linux__
+        log("Since Linux does not provide us the way to monitor the non-child process existence, we'll poll it with a timer");
         processWatchTimer->start();
 #elif _WIN32
+        log("Attaching to the process using Windows API");
         processHandle = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
         RegisterWaitForSingleObject(&eventHandle, processHandle, winOnProcessExit, this, INFINITE, WT_EXECUTEONLYONCE);
 #else
@@ -331,11 +339,13 @@ void WMProcess::onProcessTimerCheck()
     {
         if (!isProcessRunning(processId))
         {
+            log ("Process death detected by the timer. Since we can't get its exit code, we'll set it always to 0");
             onProcessFinish(0);
         }
     }
         else
     {
+        log ("Stopping process watch timer");
         processWatchTimer->stop();
     }
 }

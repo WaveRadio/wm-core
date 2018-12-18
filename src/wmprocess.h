@@ -77,6 +77,7 @@ private:
     static void CALLBACK winOnProcessExit (PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 #endif
 
+// Linux-specific process management
 #ifdef __linux__
     QTimer *processWatchTimer;
     int processPollInterval;
