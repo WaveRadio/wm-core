@@ -53,16 +53,34 @@ void WMProcess::stop(bool forced)
         return;
     }
 
-    if (forced)
+    if (isAttached)
     {
-        log ("Killing process");
-        log (QString("Forcing to kill process %1").arg(process->processId()), WMLogger::Warning);
-        process->kill();
+        log ("We're working with an attached process, we use syscalls to stop it");
+
+#ifdef __linux__
+        int signal = (forced) ? SIGKILL : SIGTERM;
+        kill(pid, signal);
+#elif _WIN32
+        TerminateProcess(processHandle, 0);
+        CloseHandle(processHandle);
+#else
+        log("Unknown OS, attached process stopping feature does not work!", WMLogger::Warning);
+        return;
+#endif
     }
         else
     {
-        log (QString("Trying to stop process %1").arg(process->processId()), WMLogger::Info);
-        process->terminate();
+        if (forced)
+        {
+            log ("Killing process");
+            log (QString("Forcing to kill process %1").arg(processId), WMLogger::Warning);
+            process->kill();
+        }
+            else
+        {
+            log (QString("Trying to stop process %1").arg(processId), WMLogger::Info);
+            process->terminate();
+        }
     }
 }
 
@@ -153,7 +171,12 @@ void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 // TODO: handle this
     WMProcess *proc = (WMProcess *)lpParameter;
 
-    proc->onProcessFinish(0); // can't get the right return code
+    long unsigned int exitCode;
+
+    if (GetExitCodeProcess(proc->processHandle, &exitCode))
+        proc->onProcessFinish(exitCode);
+    else
+        proc->onProcessFinish(0); // can't get the right return code
 }
 
 int WMProcess::readPid()
@@ -220,7 +243,7 @@ void WMProcess::start()
 #ifdef __linux__
         log ("Unfortunately, Linux process callbacks aren't supported for now ._.");
 #elif _WIN32
-        processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
+        processHandle = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
         RegisterWaitForSingleObject(&eventHandle, processHandle, winOnProcessExit, this, INFINITE, WT_EXECUTEONLYONCE);
 #else
         log("WMProcess: unknown target OS, process crash detection won't work!", WMLogger::Warning);
