@@ -53,11 +53,14 @@ public:
     static QString typeToString(ProcessType type);
     static bool isProcessRunning(int pid);
 
+    static const int RC_KILLEDBYCONTROL = 0xf291; // this is Qt's internal return code
+
 private:
 
     bool isRunning;
     bool iNeedToRespawn;
     bool isAttached;
+    bool isStopRequested;
 
     QString appPath;
     QString processTag;

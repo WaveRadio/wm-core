@@ -11,6 +11,7 @@ WMProcess::WMProcess(QString appPath, QString runtimeDir,
 
     isRunning = false;
     iNeedToRespawn = false;
+    isStopRequested = false;
 
     processId = readPid();
 
@@ -61,6 +62,8 @@ void WMProcess::stop(bool forced)
         return;
     }
 
+    isStopRequested = true;
+
     if (isAttached)
     {
         log ("We're working with an attached process, we use syscalls to stop it");
@@ -74,7 +77,7 @@ void WMProcess::stop(bool forced)
 #elif _WIN32
         log (QString("Forcing to kill process %1 using Windows syscall").arg(processId), WMLogger::Warning);
 
-        TerminateProcess(processHandle, 0);
+        TerminateProcess(processHandle, RC_KILLEDBYCONTROL);
         CloseHandle(processHandle);
 #else
         log("Unknown OS, attached process stopping feature does not work!", WMLogger::Warning);
@@ -312,13 +315,17 @@ void WMProcess::onProcessFinish(int exitCode)
     }
 
     isRunning = false;
+
+    if (isStopRequested)
+        exitCode = RC_KILLEDBYCONTROL;
+
     switch (exitCode)
     {
         case 0 :
             log (QString("Process exited normally: code 0, PID %1").arg(processId));
             break;
 
-        case 0xf291 : // Thanks Qt for this freaking magic number
+        case RC_KILLEDBYCONTROL :
             log (QString("Process %1 is killed internally").arg(processId));
             break;
 

@@ -335,6 +335,7 @@ bool WMCore::stopProcessFor(QString tag, WMProcess::ProcessType type, bool force
 
     if (proc != NULL)
     {
+        proc->setNeedsRespawn(false);
         proc->stop(forced);
         return true;
     }
@@ -394,7 +395,7 @@ void WMCore::onProcessDeath(int exitCode, bool needsToRespawn)
         createProcessFor(proc->tag(), proc->type());
     }
         else
-    if (respawnProcessesOnDeath && exitCode != 0xf291) // 0xf291 is a Qt's magic number that indicates internally killed processes
+    if (respawnProcessesOnDeath && exitCode != WMProcess::RC_KILLEDBYCONTROL)
     {
         if (respawnOnlyOnBadDeath)
         {
