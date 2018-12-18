@@ -8,6 +8,7 @@
 #include <QStringList>
 #include <QFile>
 #include <QTextStream>
+#include <QTimer>
 
 #ifdef __linux__
 #include <sys/types.h>
@@ -76,6 +77,11 @@ private:
     static void CALLBACK winOnProcessExit (PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 #endif
 
+#ifdef __linux__
+    QTimer *processWatchTimer;
+    int processPollInterval;
+#endif
+
     int readPid();
     bool writePid(int pid);
 
@@ -84,6 +90,10 @@ private:
 private slots:
     void onProcessStart();
     void onProcessFinish(int exitCode);
+
+#ifdef __linux__
+    void onProcessTimerCheck();
+#endif
 
 signals:
     void processDead(int, bool);

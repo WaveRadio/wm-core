@@ -27,6 +27,14 @@ WMProcess::WMProcess(QString appPath, QString runtimeDir,
              .arg(typeToString(processType)).arg(processTag).arg(processId), WMLogger::Info);
 
         isAttached = true;
+
+#ifdef __linux__
+        processPollInterval = 500; // ms; maybe set it by setter?
+
+        processWatchTimer = new QTimer();
+        connect(processWatchTimer, SIGNAL(timeout()), this, SLOT(onProcessTimerCheck()));
+        processWatchTimer->setInterval(processPollInterval);
+#endif
     }
         else
     {
@@ -59,8 +67,13 @@ void WMProcess::stop(bool forced)
 
 #ifdef __linux__
         int signal = (forced) ? SIGKILL : SIGTERM;
+
+        log (QString("Stopping process %1 using Linux syscall with signal %2").arg(processId).arg(signal), WMLogger::Warning);
+
         kill(pid, signal);
 #elif _WIN32
+        log (QString("Forcing to kill process %1 using Windows syscall").arg(processId), WMLogger::Warning);
+
         TerminateProcess(processHandle, 0);
         CloseHandle(processHandle);
 #else
@@ -72,7 +85,6 @@ void WMProcess::stop(bool forced)
     {
         if (forced)
         {
-            log ("Killing process");
             log (QString("Forcing to kill process %1").arg(processId), WMLogger::Warning);
             process->kill();
         }
@@ -241,7 +253,7 @@ void WMProcess::start()
         log ("Process is already running, WMProcess is attaching to it...");
 
 #ifdef __linux__
-        log ("Unfortunately, Linux process callbacks aren't supported for now ._.");
+        processWatchTimer->start();
 #elif _WIN32
         processHandle = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
         RegisterWaitForSingleObject(&eventHandle, processHandle, winOnProcessExit, this, INFINITE, WT_EXECUTEONLYONCE);
@@ -310,3 +322,20 @@ void WMProcess::onProcessFinish(int exitCode)
 
     emit processDead(exitCode, iNeedToRespawn);
 }
+
+#ifdef __linux__
+void WMProcess::onProcessTimerCheck()
+{
+    if (isRunning)
+    {
+        if (!isProcessRunning(processId))
+        {
+            onProcessFinish(0);
+        }
+    }
+        else
+    {
+        processWatchTimer->stop();
+    }
+}
+#endif
