@@ -70,7 +70,7 @@ void WMProcess::stop(bool forced)
 
         log (QString("Stopping process %1 using Linux syscall with signal %2").arg(processId).arg(signal), WMLogger::Warning);
 
-        kill(pid, signal);
+        kill(processId, signal);
 #elif _WIN32
         log (QString("Forcing to kill process %1 using Windows syscall").arg(processId), WMLogger::Warning);
 
@@ -178,9 +178,9 @@ bool WMProcess::isProcessRunning(int pid)
 #endif
 }
 
+#ifdef _WIN32
 void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
-// TODO: handle this
     WMProcess *proc = (WMProcess *)lpParameter;
 
     long unsigned int exitCode;
@@ -190,6 +190,7 @@ void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
     else
         proc->onProcessFinish(0); // can't get the right return code
 }
+#endif
 
 int WMProcess::readPid()
 {
