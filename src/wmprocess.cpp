@@ -83,7 +83,7 @@ bool WMProcess::attached()
 
 int WMProcess::pid()
 {
-    return process->processId();
+    return processId;
 }
 
 QString WMProcess::tag()
@@ -151,6 +151,9 @@ bool WMProcess::isProcessRunning(int pid)
 void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
 // TODO: handle this
+    WMProcess *proc = (WMProcess *)lpParameter;
+
+    proc->onProcessFinish(0); // can't get the right return code
 }
 
 int WMProcess::readPid()
@@ -218,15 +221,14 @@ void WMProcess::start()
         log ("Unfortunately, Linux process callbacks aren't supported for now ._.");
 #elif _WIN32
         processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
-
-        RegisterWaitForSingleObject(&eventHandle, processHandle, winOnProcessExit, NULL, INFINITE, WT_EXECUTEONLYONCE);
+        RegisterWaitForSingleObject(&eventHandle, processHandle, winOnProcessExit, this, INFINITE, WT_EXECUTEONLYONCE);
 #else
         log("WMProcess: unknown target OS, process crash detection won't work!", WMLogger::Warning);
 #endif
 
         onProcessStart();
     }
-    else
+        else
     {
         log ("Creating a new process...");
         process->start();
@@ -235,7 +237,7 @@ void WMProcess::start()
 
 void WMProcess::log(QString message, WMLogger::LogLevel level)
 {
-    WMLogger::instance->log(message, level, "sproc");
+    WMLogger::instance->log(message, level, "wproc");
 }
 
 void WMProcess::onProcessStart()
