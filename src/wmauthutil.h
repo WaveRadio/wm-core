@@ -20,6 +20,7 @@ public:
     static int rangedRand (int min, int max);
     static QString sha256 (QString text);
     static QString randomString (int length = 64);
+    static QString authHash (QString secret, QString nonce);
 
 signals:
 

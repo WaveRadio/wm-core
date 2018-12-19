@@ -7,7 +7,7 @@ WMAuthUtil::WMAuthUtil(QObject *parent) : QObject(parent)
 
 int WMAuthUtil::rangedRand(int min, int max)
 {
-    srand (time(NULL));
+    // srand (time(NULL));
     return min + (rand() % (max - min + 1));
 }
 
@@ -29,4 +29,9 @@ QString WMAuthUtil::randomString(int length)
     }
 
     return res;
+}
+
+QString WMAuthUtil::authHash(QString secret, QString nonce)
+{
+    return sha256(sha256(secret) + nonce);
 }

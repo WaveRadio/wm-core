@@ -84,12 +84,14 @@ void WMControlServer::onNewClientConnection()
 
         WMControlClient *client = new WMControlClient(sock);
 
+        client->setChallengeNonce(WMAuthUtil::randomString());
+
         connect(client, SIGNAL(newCommandReceived(QString)), this, SLOT(onClientCommand(QString)));
         connect(client, SIGNAL(disconnected()), this, SLOT(onClientDisconnect()));
 
         clients.append(client);
 
-        client->sendCommand(QString("INIT"));
+        client->sendCommand(QString("INIT %1 #WMCore/%2").arg(client->challengeNonce()).arg(WMCORE_VERSION));
     }
 }
 
@@ -111,9 +113,38 @@ void WMControlServer::onClientCommand(QString message)
 
     QStringList commands = message.split(" ", QString::SkipEmptyParts);
 
+    if (commands.count() == 0)
+        return;
+
     if (commands[0] == "AUTH")
     {
+        if (commands.count() < 2)
+        {
+            sendErrorMessage(client, 999);
+            return;
+        }
 
+        QString secret = core->getCurrentSecret();
+        if (commands[1] == WMAuthUtil::authHash(secret, client->challengeNonce()))
+        {
+            client->setAuthorized(true);
+            client->sendCommand("AUTH OK #Welcome here :3");
+            log ("Client auth OK");
+            return;
+        }
+            else
+        {
+            log ("Client auth failed", WMLogger::Warning);
+            sendErrorMessage(client, 101);
+            return;
+        }
+    }
+
+    if (!client->authorized())
+    {
+        log ("Client tries to send commands while unauthorized!", WMLogger::Warning);
+        sendErrorMessage(client, 100);
+        return;
     }
 
     if (commands[0] == "SERVICE")
