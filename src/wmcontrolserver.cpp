@@ -49,6 +49,18 @@ void WMControlServer::sendClientCommand(WMControlClient *client, QString command
         log ("Trying to send a command to a non-existent client!", WMLogger::Warning);
 }
 
+void WMControlServer::broadcastCommand(QString command)
+{
+    for (int i = 0; i < clients.count(); i++)
+    {
+        WMControlClient *client = clients.at(i);
+        if (client->authorized())
+        {
+            client->sendCommand(command);
+        }
+    }
+}
+
 void WMControlServer::sendErrorMessage(WMControlClient *client, int code, QStringList args)
 {
     QString comment = errorCodes.value(code);
@@ -125,6 +137,14 @@ void WMControlServer::onClientCommand(QString message)
         }
 
         QString secret = core->getCurrentSecret();
+
+        if (secret.isEmpty())
+        {
+            log ("WARNING: No Secret received, all auth attempts are declined!", WMLogger::Warning);
+            sendErrorMessage(client, 101);
+            return;
+        }
+
         if (commands[1] == WMAuthUtil::authHash(secret, client->challengeNonce()))
         {
             client->setAuthorized(true);

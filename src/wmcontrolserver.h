@@ -33,6 +33,7 @@ public:
     ~WMControlServer();
 
     void sendClientCommand(WMControlClient *client, QString command);
+    void broadcastCommand(QString command);
     void sendErrorMessage(WMControlClient *client, int code, QStringList args = QStringList());
 
     void stop();
