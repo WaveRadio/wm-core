@@ -169,6 +169,24 @@ void WMControlServer::onClientCommand(QString message)
 
     if (commands[0] == "SERVICE")
     {
+        if (commands.count() >= 2 && commands[1] == "LIST")
+        {
+            QStringList instances = core->getInstancesList();
+
+            if (instances.count() == 0)
+            {
+                client->sendCommand("SERVICE NOINSTANCES");
+                return;
+            }
+
+            for (int i = 0; i < instances.count(); i++)
+            {
+                client->sendCommand("SERVICE INSTANCE " + instances.at(i));
+            }
+
+            return;
+        }
+
         if (commands.count() < 4)
         {
             client->sendCommand("ERROR 199 #Bad command syntax");

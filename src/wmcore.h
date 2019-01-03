@@ -31,6 +31,7 @@ public:
     // Broadcasting processes
     bool performProcessAction(QString tag, WMProcess::ProcessType type, WMControlServer::ProcessControlAction action);
     QString getCurrentSecret();
+    QStringList getInstancesList();
 
 private:
 

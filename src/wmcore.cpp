@@ -109,6 +109,39 @@ QString WMCore::getCurrentSecret()
     return secret;
 }
 
+QStringList WMCore::getInstancesList()
+{
+                             // tag, type, state
+    QString listItemTemplate = "%1 %2 %3";
+    QString stateString;
+    QString tag;
+    QStringList list;
+
+    for (int i = 0; i < liquidsoapTags.count(); i++)
+    {
+        tag = liquidsoapTags.at(i);
+        if (getProcessFor(tag, WMProcess::Liquidsoap) == NULL)
+            stateString = "down";
+        else
+            stateString = "up";
+
+        list.append(listItemTemplate.arg("liquidsoap").arg(tag).arg(stateString));
+    }
+
+    for (int i = 0; i < icecastTags.count(); i++)
+    {
+        tag = icecastTags.at(i);
+        if (getProcessFor(tag, WMProcess::Icecast) == NULL)
+            stateString = "down";
+        else
+            stateString = "up";
+
+        list.append(listItemTemplate.arg("icecast").arg(tag).arg(stateString));
+    }
+
+    return list;
+}
+
 void WMCore::log(QString message, WMLogger::LogLevel logLevel, QString component)
 {
     WMLogger::instance->log(message, logLevel, component);
