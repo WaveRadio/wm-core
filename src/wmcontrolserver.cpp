@@ -214,6 +214,52 @@ void WMControlServer::onServerExit()
     server->close();
 }
 
+void WMControlServer::onProcessChangeState(QString tag, WMProcess::ProcessType type, WMControlServer::ProcessControlAction action)
+{
+    QString stringType;
+
+    switch (type)
+    {
+        case WMProcess::Liquidsoap:
+            stringType = "LIQUIDSOAP";
+            break;
+
+        case WMProcess::Icecast:
+            stringType = "ICECAST";
+            break;
+
+        default:
+            log ("Bad ProcessType, won't broadcast this event", WMLogger::Warning);
+            return;
+    }
+
+    QString stringAction;
+    switch (action)
+    {
+        case Restart:
+            stringAction = "RESTART";
+            break;
+
+        case Stop:
+            stringAction = "STOP";
+            break;
+
+        case Start:
+            stringAction = "START";
+            break;
+
+        case Crash:
+            stringAction = "CRASH";
+            break;
+
+        default:
+            log ("Bad ProcessControlAction, won't broadcast this event", WMLogger::Warning);
+            return;
+    }
+
+    broadcastCommand(QString("SERVICE %1 %2 %3").arg(stringType).arg(stringAction).arg(tag));
+}
+
 void WMControlServer::log(QString message, WMLogger::LogLevel logLevel, QString component)
 {
     WMLogger::instance->log(message, logLevel, component);

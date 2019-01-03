@@ -26,7 +26,8 @@ public:
     enum ProcessControlAction {
         Start,
         Stop,
-        Restart
+        Restart,
+        Crash
     };
 
     explicit WMControlServer(int serverPort, WMCore *core = 0);
@@ -60,6 +61,8 @@ private slots:
 
 public slots:
     void onServerExit();
+
+    void onProcessChangeState(QString tag, WMProcess::ProcessType type, ProcessControlAction action);
 };
 
 #endif // WMCONTROLSERVER_H

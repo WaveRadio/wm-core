@@ -404,6 +404,8 @@ void WMCore::onProcessStart()
 
     log (QString("A process of type %1 for tag %2 has successfully started with pid %3")
          .arg(proc->type()).arg(proc->tag()).arg(proc->pid()));
+
+    server->onProcessChangeState(proc->tag(), proc->type(), WMControlServer::Start);
 }
 
 void WMCore::onProcessDeath(int exitCode, bool needsToRespawn)
@@ -415,6 +417,11 @@ void WMCore::onProcessDeath(int exitCode, bool needsToRespawn)
 
 
     processPool.removeOne(proc);
+
+    server->onProcessChangeState(proc->tag(), proc->type(),
+        (exitCode == 0 || exitCode == WMProcess::RC_KILLEDBYCONTROL)
+                                 ? WMControlServer::Stop
+                                 : WMControlServer::Crash);
 
     if (needsToRespawn)
     {
