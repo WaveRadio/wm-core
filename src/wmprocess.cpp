@@ -49,6 +49,7 @@ WMProcess::WMProcess(QString appPath, QString runtimeDir,
 
         connect(process, SIGNAL(started()), this, SLOT(onProcessStart()));
         connect(process, SIGNAL(finished(int)), this, SLOT(onProcessFinish(int)));
+        connect(process, SIGNAL(errorOccurred(QProcess::ProcessError)), this, SLOT(onProcessFault(QProcess::ProcessError)));
     }
 
     log (QString("Created a new instance of a process handler, process image %1").arg(appPath), WMLogger::Info);
@@ -308,7 +309,7 @@ void WMProcess::onProcessStart()
 
 void WMProcess::onProcessFinish(int exitCode)
 {
-    if (!isRunning)
+    if (!isRunning && exitCode != RC_CANNOTSTART)
     {
         log ("WARNING: onProcessFinish() is emitted on a dead process!", WMLogger::Warning);
         return;
@@ -329,6 +330,10 @@ void WMProcess::onProcessFinish(int exitCode)
             log (QString("Process %1 is killed internally").arg(processId));
             break;
 
+        case RC_CANNOTSTART :
+            log (QString("Process could not start up"));
+            break;
+
         default :
             log (QString("WARNING: Process %1 finished abnormally, exit code is %2")
                  .arg(processId).arg(exitCode),
@@ -337,6 +342,14 @@ void WMProcess::onProcessFinish(int exitCode)
     }
 
     emit processDead(exitCode, iNeedToRespawn);
+}
+
+void WMProcess::onProcessFault(QProcess::ProcessError error)
+{
+    log (QString("Cannot start process, error code %1").arg(error));
+
+    if (error == QProcess::FailedToStart)
+        emit onProcessFinish(RC_CANNOTSTART);
 }
 
 #ifdef __linux__

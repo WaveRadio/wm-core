@@ -24,7 +24,12 @@ WMCore::WMCore(QString configFile, QCoreApplication *app, QObject *parent) :
     log ("Creating server...");
     server = new WMControlServer(serverPort, this);
 
-    log ("Loading process instances...");
+    // Icecast first, Liquidsoap will probably connect to it
+    log ("Loading Icecast instances...");
+    if (loadInstances(WMProcess::Icecast))
+        createProcesses(WMProcess::Icecast);
+
+    log ("Loading Liquidsoap instances...");
     if (loadInstances(WMProcess::Liquidsoap))
         createProcesses(WMProcess::Liquidsoap);
 }
@@ -446,7 +451,7 @@ void WMCore::onProcessDeath(int exitCode, bool needsToRespawn)
     WMProcess *proc = (WMProcess *)QObject::sender();
 
     log (QString("A process of type %1 for tag %2 has just dead with exit code %3")
-         .arg(proc->type()).arg(proc->tag()).arg(exitCode));
+         .arg(proc->typeAsString()).arg(proc->tag()).arg(exitCode), WMLogger::Info);
 
 
     processPool.removeOne(proc);
@@ -455,6 +460,12 @@ void WMCore::onProcessDeath(int exitCode, bool needsToRespawn)
         (exitCode == 0 || exitCode == WMProcess::RC_KILLEDBYCONTROL)
                                  ? WMControlServer::Stop
                                  : WMControlServer::Crash);
+
+    if (exitCode == WMProcess::RC_CANNOTSTART)
+    {
+        log ("This process could not even start up, check your configuration!", WMLogger::Warning);
+        return;
+    }
 
     if (needsToRespawn)
     {

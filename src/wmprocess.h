@@ -53,7 +53,8 @@ public:
     static QString typeToString(ProcessType type);
     static bool isProcessRunning(int pid);
 
-    static const int RC_KILLEDBYCONTROL = 0xf291; // this is Qt's internal return code
+    static const int RC_KILLEDBYCONTROL = 0xf291;  // this is Qt's internal return code
+    static const int RC_CANNOTSTART =   0xfa113d;
 
 private:
 
@@ -94,6 +95,7 @@ private:
 private slots:
     void onProcessStart();
     void onProcessFinish(int exitCode);
+    void onProcessFault(QProcess::ProcessError error);
 
 #ifdef __linux__
     void onProcessTimerCheck();
