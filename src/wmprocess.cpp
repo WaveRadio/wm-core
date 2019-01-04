@@ -160,7 +160,7 @@ bool WMProcess::isProcessRunning(int pid)
 #elif _WIN32
     HANDLE pss = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 
-    PROCESSENTRY32 pe = { 0 };
+    PROCESSENTRY32 pe;
     pe.dwSize = sizeof(pe);
 
     if (Process32First(pss, &pe))
@@ -185,6 +185,8 @@ bool WMProcess::isProcessRunning(int pid)
 #ifdef _WIN32
 void WMProcess::winOnProcessExit(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
+    Q_UNUSED(TimerOrWaitFired);
+
     WMProcess *proc = (WMProcess *)lpParameter;
 
     long unsigned int exitCode;

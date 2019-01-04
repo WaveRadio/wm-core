@@ -64,11 +64,11 @@ private:
     bool isStopRequested;
 
     QString appPath;
-    QString processTag;
     QString runtimeDir;
-    QString pidFilePath;
-    QStringList args;
+    QString processTag;
     ProcessType processType;
+    QStringList args;
+    QString pidFilePath;
 
     QProcess *process;
     int processId;

@@ -35,6 +35,12 @@ public:
 
 private:
 
+
+    /// Objects & Pointers
+    QCoreApplication *app;
+    WMControlServer *server;
+    QList<WMProcess *> processPool;
+
     /// Config variables
     // System
     QString logFile;
@@ -53,11 +59,6 @@ private:
 
     // Control server
     uint serverPort;
-
-    /// Objects & Pointers
-    QCoreApplication *app;
-    WMControlServer *server;
-    QList<WMProcess *> processPool;
 
     /// Methods
     // System
