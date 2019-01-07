@@ -177,6 +177,10 @@ void WMCore::loadConfig(QString configFile)
 
     dataDir = settings.value("data_dir", "/etc/wavemanager").toString();
     runtimeDir = settings.value("runtime_dir", "/var/run/wavemanager").toString();
+
+    icecastWorkingDir = settings.value("icecast_workdir", dataDir + "/icecast").toString();
+    liquidsoapWorkingDir = settings.value("liquidsoap_workdir", dataDir + "/scripts").toString();
+
     settings.endGroup();
 }
 
@@ -360,6 +364,7 @@ bool WMCore::createProcessFor(QString tag, WMProcess::ProcessType type)
 
     QString procPath;
     QStringList procArgs;
+    QString procWd;
 
     switch (type)
     {
@@ -371,11 +376,13 @@ bool WMCore::createProcessFor(QString tag, WMProcess::ProcessType type)
         case WMProcess::Liquidsoap:
             procPath = liquidsoapAppPath;
             procArgs << QString("%1/scripts/%2.liq").arg(dataDir).arg(tag);
+            procWd = liquidsoapWorkingDir;
             break;
 
         case WMProcess::Icecast:
             procPath = icecastAppPath;
-            procArgs << "-c" << QString("%1/conf/%2.xml").arg(dataDir).arg(tag);
+            procArgs << "-c" << QString("%1/icecast/%2.xml").arg(dataDir).arg(tag);
+            procWd = icecastWorkingDir;
             break;
 
         default:
@@ -383,7 +390,7 @@ bool WMCore::createProcessFor(QString tag, WMProcess::ProcessType type)
             return false;
     }
 
-    WMProcess *process = new WMProcess(procPath, runtimeDir, tag, type, procArgs);
+    WMProcess *process = new WMProcess(procPath, runtimeDir, tag, type, procArgs, procWd);
 
     processPool.append(process);
 

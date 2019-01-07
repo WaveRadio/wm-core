@@ -35,7 +35,8 @@ public:
 
     explicit WMProcess(QString appPath, QString runtimeDir,
                        QString processTag, ProcessType processType,
-                       QStringList args, QObject *parent = 0);
+                       QStringList args, QString workingDir = QString(),
+                       QObject *parent = 0);
 
     void start();
     void stop(bool forced = false);

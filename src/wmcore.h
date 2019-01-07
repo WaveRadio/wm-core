@@ -50,6 +50,8 @@ private:
     // Broadcasting processes
     QString liquidsoapAppPath;
     QString icecastAppPath;
+    QString liquidsoapWorkingDir;
+    QString icecastWorkingDir;
     QString runtimeDir;
     QString dataDir;
     QStringList liquidsoapTags;

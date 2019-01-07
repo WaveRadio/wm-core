@@ -2,7 +2,7 @@
 
 WMProcess::WMProcess(QString appPath, QString runtimeDir,
                      QString processTag, ProcessType processType,
-                     QStringList args, QObject *parent) :
+                     QStringList args, QString workingDir, QObject *parent) :
 
                      QObject(parent), appPath(appPath), runtimeDir(runtimeDir),
                      processTag(processTag), processType(processType), args(args)
@@ -46,10 +46,12 @@ WMProcess::WMProcess(QString appPath, QString runtimeDir,
         process = new QProcess(this);
         process->setProgram(appPath);
         process->setArguments(args);
+        process->setWorkingDirectory(workingDir);
 
         connect(process, SIGNAL(started()), this, SLOT(onProcessStart()));
         connect(process, SIGNAL(finished(int)), this, SLOT(onProcessFinish(int)));
-        connect(process, SIGNAL(errorOccurred(QProcess::ProcessError)), this, SLOT(onProcessFault(QProcess::ProcessError)));
+        connect(process, SIGNAL(errorOccurred(QProcess::ProcessError)), this,
+                SLOT(onProcessFault(QProcess::ProcessError)));
     }
 
     log (QString("Created a new instance of a process handler, process image %1").arg(appPath), WMLogger::Info);
