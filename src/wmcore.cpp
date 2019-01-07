@@ -235,7 +235,7 @@ bool WMCore::loadInstances(WMProcess::ProcessType type)
 
     if (error.error != QJsonParseError::NoError)
     {
-        log (QString("A JSON parsing error occured: #%1; %2; file %3")
+        log (QString("A JSON parsing error occurred: #%1; %2; file %3")
              .arg(error.error).arg(error.errorString()).arg(file.fileName()), WMLogger::Warning);
         return false;
     }
